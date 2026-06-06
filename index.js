@@ -46,6 +46,17 @@ app.get("/check", async (req, res) => {
 
     const content = await page.content();
 
+    const markers = {
+      roomId: content.includes("roomId"),
+      liveRoom: content.includes("liveRoom"),
+      isRoomLive: content.includes("isRoomLive"),
+      webcast: content.includes("webcast"),
+      liveStudio: content.includes("liveStudio"),
+      room_id: content.includes("room_id")
+    };
+
+res.json(markers);
+
     // Тимчасова перевірка
     const isLive =
       content.includes("LIVE") &&
