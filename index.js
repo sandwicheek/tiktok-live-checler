@@ -57,6 +57,14 @@ app.get("/check", async (req, res) => {
 
 res.json(markers);
 
+    const finalUrl = page.url();
+const title = await page.title();
+
+res.json({
+  finalUrl,
+  title
+});
+
     // Тимчасова перевірка
     const isLive =
       content.includes("LIVE") &&
