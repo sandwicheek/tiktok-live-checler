@@ -38,9 +38,11 @@ app.get("/check", async (req, res) => {
     );
 
     await page.goto(url, {
-      waitUntil: "networkidle2",
-      timeout: 60000
+      waitUntil: "domcontentloaded",
+      timeout: 15000
     });
+
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     const content = await page.content();
 
