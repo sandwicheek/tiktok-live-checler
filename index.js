@@ -14,11 +14,6 @@ app.get("/check", async (req, res) => {
   }
 
   const url = `https://www.tiktok.com/@${user}`;
-
-  console.log(
-  "Chromium path:",
-  await chromium.executablePath()
-);
   
   let browser;
 
