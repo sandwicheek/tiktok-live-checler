@@ -14,24 +14,24 @@ app.get("/check", async (req, res) => {
   }
 
   const url = `https://www.tiktok.com/@${user}`;
-  
+
   let browser;
 
   try {
-  console.log("Checking user:", user);
-  console.log("Opening URL:", url);
+    console.log("Checking user:", user);
+    console.log("Opening URL:", url);
 
-  browser = await puppeteer.launch({
-    args: [
-      ...chromium.args,
-      "--no-sandbox",
-      "--disable-setuid-sandbox"
-    ],
-    executablePath: await chromium.executablePath(),
-    headless: true
-  });
+    browser = await puppeteer.launch({
+      args: [
+        ...chromium.args,
+        "--no-sandbox",
+        "--disable-setuid-sandbox"
+      ],
+      executablePath: await chromium.executablePath(),
+      headless: true
+    });
 
-  const page = await browser.newPage();
+    const page = await browser.newPage();
 
     await page.setUserAgent(
       "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
@@ -55,25 +55,20 @@ app.get("/check", async (req, res) => {
       room_id: content.includes("room_id")
     };
 
-res.json(markers);
-
     const finalUrl = page.url();
-const title = await page.title();
+    const title = await page.title();
 
-res.json({
-  finalUrl,
-  title
-});
-
-    // Тимчасова перевірка
-    const isLive =
-      content.includes("LIVE") &&
-      content.includes("live");
+    const textSample = await page.evaluate(() => {
+      return document.body.innerText.substring(0, 1500);
+    });
 
     res.json({
       success: true,
       user,
-      isLive
+      finalUrl,
+      title,
+      markers,
+      textSample
     });
 
   } catch (e) {
