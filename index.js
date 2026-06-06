@@ -1,5 +1,6 @@
 const express = require("express");
-const puppeteer = require("puppeteer");
+const chromium = require("@sparticuz/chromium");
+const puppeteer = require("puppeteer-core");
 
 const app = express();
 
@@ -14,23 +15,28 @@ app.get("/check", async (req, res) => {
 
   const url = `https://www.tiktok.com/@${user}`;
 
+  console.log(
+  "Chromium path:",
+  await chromium.executablePath()
+);
+  
   let browser;
 
   try {
-    console.log("Checking user:", user);
-    console.log("Opening URL:", url);
+  console.log("Checking user:", user);
+  console.log("Opening URL:", url);
 
-    browser = await puppeteer.launch({
-      headless: true,
-      executablePath:
-        "/opt/render/.cache/puppeteer/chrome/linux-127.0.6533.88/chrome-linux64/chrome",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox"
-      ]
-    });
+  browser = await puppeteer.launch({
+    args: [
+      ...chromium.args,
+      "--no-sandbox",
+      "--disable-setuid-sandbox"
+    ],
+    executablePath: await chromium.executablePath(),
+    headless: true
+  });
 
-    const page = await browser.newPage();
+  const page = await browser.newPage();
 
     await page.setUserAgent(
       "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
