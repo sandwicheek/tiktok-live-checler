@@ -1,13 +1,13 @@
 {
-  "name": "tiktok-live-checker",
+  "name": "tiktok-live-bot",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "TikTok Live Telegram Notifier via Cron",
+  "main": "bot.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node bot.js"
   },
   "dependencies": {
-    "@sparticuz/chromium": "^138.0.1",
-    "express": "^4.21.2",
-    "puppeteer-core": "^24.10.2"
+    "axios": "^1.7.0",
+    "tiktok-live-connector": "^1.1.0"
   }
 }
