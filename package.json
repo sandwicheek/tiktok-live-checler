@@ -10,6 +10,6 @@
     "@supabase/supabase-js": "^2.43.0",
     "axios": "^1.7.0",
     "express": "^4.19.0",
-    "tiktok-live-connector": "*"
+    "tiktok-live-connector": "1.1.7"
   }
 }
