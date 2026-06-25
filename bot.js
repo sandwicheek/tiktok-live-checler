@@ -51,6 +51,8 @@ async function checkTikTokLive() {
       isLiveNow = "false";
     }
 
+    console.log(`[ОШИБКА ТІКТОК]: Не вдалося отримати статус ефіру. Причина: ${err.message}`);
+
     if (isLiveNow === "true") console.log(`[СТАТУС] @${TIKTOK_USERNAME} зараз в ЕФІРІ! 🔴`);
     else console.log(`[СТАТУС] @${TIKTOK_USERNAME} зараз офлайн. 💤`);
 
