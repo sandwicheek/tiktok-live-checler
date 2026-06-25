@@ -1,0 +1,59 @@
+const { WebcastPushConnection } = require('tiktok-live-connector');
+const { createClient } = require('@supabase/supabase-js');
+const axios = require('axios');
+
+// Налаштування з Render
+const TIKTOK_USERNAME = process.env.TIKTOK_USERNAME || "_sasha__shu_";
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function sendTelegramAlert(text) {
+  try {
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      chat_id: TELEGRAM_CHAT_ID,
+      text: text,
+      parse_mode: "Markdown"
+    });
+  } catch (err) {
+    console.error("Помилка відправки в TG:", err.message);
+  }
+}
+
+async function run() {
+  // 1. Читаємо попередній статус з бази даних
+  const { data: statusData } = await supabase.from('bot_status').select('is_live').eq('id', 1).single();
+  const lastStatus = statusData ? statusData.is_live : "false";
+
+  const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME);
+  let isLiveNow = "false";
+
+  try {
+    // 2. Стукаємо в TikTok
+    const state = await tiktokConnection.connect();
+    if (state.roomId) {
+      isLiveNow = "true";
+    }
+    tiktokConnection.disconnect();
+  } catch (err) {
+    isLiveNow = "false";
+  }
+
+  // 3. Порівнюємо статус (як у твоєму початковому коді)
+  if (isLiveNow === "true" && lastStatus === "false") {
+    await sendTelegramAlert(`🔴 **Почався ефір!**\n\nАкаунт: @${TIKTOK_USERNAME}\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
+    await supabase.from('bot_status').update({ is_live: 'true' }).eq('id', 1);
+  } 
+  else if (isLiveNow === "false" && lastStatus === "true") {
+    await sendTelegramAlert(`🟢 Трансляцію акаунта @${TIKTOK_USERNAME} завершилась.`);
+    await supabase.from('bot_status').update({ is_live: 'false' }).eq('id', 1);
+  }
+
+  // Завершуємо роботу
+  process.exit(0);
+}
+
+run();
