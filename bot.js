@@ -1,4 +1,5 @@
-const { WebcastPushConnection } = require('tiktok-live-connector');
+const TikTokLiveConnector = require('tiktok-live-connector');
+const WebcastPushConnection = TikTokLiveConnector.WebcastPushConnection || TikTokLiveConnector;
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 const express = require('express');
