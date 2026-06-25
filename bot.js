@@ -1,4 +1,17 @@
-const WebcastPushConnection = require('tiktok-live-connector');
+let WebcastPushConnection;
+try {
+  const tkl = require('tiktok-live-connector');
+  if (tkl.WebcastPushConnection) {
+    WebcastPushConnection = tkl.WebcastPushConnection;
+  } else if (typeof tkl === 'function') {
+    WebcastPushConnection = tkl;
+  } else {
+    WebcastPushConnection = tkl.default || tkl;
+  }
+} catch (e) {
+  console.error("Помилка імпорту коннектора:", e.message);
+}
+
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 const express = require('express');
