@@ -51,6 +51,9 @@ async function checkTikTokLive() {
       isLiveNow = "false";
     }
 
+    if (isLiveNow === "true") console.log(`[СТАТУС] @${TIKTOK_USERNAME} зараз в ЕФІРІ! 🔴`);
+    else console.log(`[СТАТУС] @${TIKTOK_USERNAME} зараз офлайн. 💤`);
+
     if (isLiveNow === "true" && lastStatus === "false") {
       await sendTelegramAlert(`🔴 **Почався ефір!**\n\nАкаунт: @${TIKTOK_USERNAME}\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
       await supabase.from('bot_status').update({ is_live: 'true' }).eq('id', 1);
