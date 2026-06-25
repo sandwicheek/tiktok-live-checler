@@ -8,8 +8,8 @@ try {
   } else {
     WebcastPushConnection = tkl.default || tkl;
   }
-} catch (e) {
-  console.error("Помилка імпорту коннектора:", e.message);
+} catch (importError) {
+  console.error("Помилка імпорту коннектора:", importError.message);
 }
 
 const { createClient } = require('@supabase/supabase-js');
@@ -24,11 +24,10 @@ const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
-const RENDER_APP_URL = process.env.RENDER_APP_URL; // Посилання на твій сервіс (додамо в кінці)
+const RENDER_APP_URL = process.env.RENDER_APP_URL;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Створюємо просту вебсторінку, щоб Render бачив, що сервіс живий
 app.get('/', (req, res) => res.send('Бот працює!'));
 app.get('/ping', (req, res) => res.send('Понг!'));
 app.listen(PORT, () => console.log(`Вебсервер запущено на порту ${PORT}`));
@@ -40,12 +39,11 @@ async function sendTelegramAlert(text) {
       text: text,
       parse_mode: "Markdown"
     });
-  } catch (err) {
-    console.error("Помилка відправки в TG:", err.message);
+  } catch (tgError) {
+    console.error("Помилка відправки в TG:", tgError.message);
   }
 }
 
-// Головна функція перевірки
 async function checkTikTokLive() {
   console.log(`Перевірка трансляції для @${TIKTOK_USERNAME}...`);
 
@@ -53,44 +51,51 @@ async function checkTikTokLive() {
     const { data: statusData } = await supabase.from('bot_status').select('is_live').eq('id', 1).single();
     const lastStatus = statusData ? statusData.is_live : "false";
 
-    const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME);
     let isLiveNow = "false";
 
-    try {
-      const state = await tiktokConnection.connect();
-      if (state.roomId) isLiveNow = "true";
-      tiktokConnection.disconnect();
-    } catch (err) {
-      isLiveNow = "false";
+    if (!WebcastPushConnection) {
+      console.error("[КРИТИЧНО]: Коннектор TikTok не ініціалізовано!");
+      return;
     }
 
-    console.log(`[ОШИБКА ТІКТОК]: Не вдалося отримати статус ефіру. Причина: ${err.message}`);
+    try {
+      const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME);
+      const state = await tiktokConnection.connect();
+      if (state.roomId) {
+        isLiveNow = "true";
+      }
+      tiktokConnection.disconnect();
+    } catch (tiktokError) {
+      isLiveNow = "false";
+      console.log(`[ІНФО]: ТікТок повернув статус офлайн або помилку: ${tiktokError.message}`);
+    }
 
-    if (isLiveNow === "true") console.log(`[СТАТУС] @${TIKTOK_USERNAME} зараз в ЕФІРІ! 🔴`);
-    else console.log(`[СТАТУС] @${TIKTOK_USERNAME} зараз офлайн. 💤`);
+    if (isLiveNow === "true") {
+      console.log(`[СТАТУС]: @${TIKTOK_USERNAME} зараз в ЕФІРІ! 🔴`);
+    } else {
+      console.log(`[СТАТУС]: @${TIKTOK_USERNAME} зараз офлайн. 💤`);
+    }
 
     if (isLiveNow === "true" && lastStatus === "false") {
       await sendTelegramAlert(`🔴 **Почався ефір!**\n\nАкаунт: @${TIKTOK_USERNAME}\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
       await supabase.from('bot_status').update({ is_live: 'true' }).eq('id', 1);
     } 
     else if (isLiveNow === "false" && lastStatus === "true") {
-      await sendTelegramAlert(`🟢 Трансляцію акаунта @${TIKTOK_USERNAME} завершилась.`);
+      await sendTelegramAlert(`🟢 Трансляція акаунта @${TIKTOK_USERNAME} завершилась.`);
       await supabase.from('bot_status').update({ is_live: 'false' }).eq('id', 1);
     }
-  } catch (globalErr) {
-    console.error("Помилка в циклі:", globalErr.message);
+  } catch (globalError) {
+    console.error("Помилка в циклі перевірки:", globalError.message);
   }
 }
 
-// Запускаємо перевірку кожні 4 хвилини (240 000 мілісекунд)
 setInterval(checkTikTokLive, 240000);
-checkTikTokLive(); // Перший запуск одразу
+checkTikTokLive();
 
-// Функція «самопінгу» — кожні 10 хвилин бот смикає сам себе, щоб Render не заснув
 setInterval(() => {
   if (RENDER_APP_URL) {
     axios.get(`${RENDER_APP_URL}/ping`)
       .then(() => console.log('Самопінг успішний, бот не спить!'))
-      .catch(err => console.error('Помилка самопінгу:', err.message));
+      .catch(pingError => console.error('Помилка самопінгу:', pingError.message));
   }
 }, 600000);
