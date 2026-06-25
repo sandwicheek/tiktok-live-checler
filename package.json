@@ -7,6 +7,7 @@
     "start": "node bot.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.43.0",
     "axios": "^1.7.0",
     "tiktok-live-connector": "^1.1.0"
   }
