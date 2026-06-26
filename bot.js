@@ -86,7 +86,6 @@ async function checkTikTokLive() {
       } else {
         isLiveNow = "false";
       }
-    }
       
       tiktokConnection.disconnect();
     } catch (tiktokError) {
