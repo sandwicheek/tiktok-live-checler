@@ -59,16 +59,23 @@ async function checkTikTokLive() {
 
     let isLiveNow = "false";
 
-    // Додаємо жорстку імітацію реального браузера та ігнорування блоків
-      const videoUrl = await ytDlp(`https://www.tiktok.com/@${TIKTOK_USERNAME}/live`, {
+    try {
+      // Беремо проксі з налаштувань Render або залишаємо порожнім
+      const proxyUrl = process.env.PROXY_URL || ""; 
+
+      const options = {
         getUrl: true,
         noWarnings: true,
         strictOptions: true,
-        // Оці 3 рядки нижче — наша нова зброя:
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         noCheckCertificates: true,
         geoBypass: true
-      });
+      };
+
+      // Якщо проксі вказано, додаємо його в аргументи для yt-dlp
+      if (proxyUrl) {
+        options.proxy = proxyUrl;
+      }
 
       // Якщо утиліта знайшла дані — стрім іде!
       if (videoUrl) {
