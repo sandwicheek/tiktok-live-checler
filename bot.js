@@ -103,13 +103,6 @@ async function checkTikTokLive() {
       isLiveNow = "false";
       console.log(`[ТІКТОК API ПОМИЛКА]: ${tiktokError.message}`);
     }
-      
-      tiktokConnection.disconnect();
-    } catch (tiktokError) {
-      isLiveNow = "false";
-      // Тепер ми точно побачимо, де саме і яка помилка сталася
-      console.log(`[ТІКТОК API ПОМИЛКА]: ${tiktokError.message}`);
-    }
 
     if (isLiveNow === "true") {
       console.log(`[СТАТУС]: @${TIKTOK_USERNAME} зараз в ЕФІРІ! 🔴`);
