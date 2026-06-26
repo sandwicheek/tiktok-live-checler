@@ -27,11 +27,7 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const RENDER_APP_URL = process.env.RENDER_APP_URL;
-
-// --- НАЛАШТУВАННЯ ПРОКСІ ---
-// Заміни тут IP та ПОРТ на свої. Якщо є логін/пароль, формат: "http://user:pass@ip:port"
-const PROXY_URL = "http://199.247.29.193:50000"; 
-// ---------------------------
+const PROXY_URL = process.env.PROXY_URL || "socks5://199.247.29.193:50000";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
