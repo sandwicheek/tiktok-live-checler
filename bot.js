@@ -47,8 +47,6 @@ async function sendTelegramAlert(text) {
   }
 }
 
-const axios = require('axios');
-
 async function checkTikTokLive() {
   console.log(`Перевірка трансляції для @${TIKTOK_USERNAME} через RapidAPI (Check Alive)...`);
 
