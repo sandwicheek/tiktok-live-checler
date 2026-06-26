@@ -13,6 +13,7 @@ try {
 }
 
 const { createClient } = require('@supabase/supabase-js');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const axios = require('axios');
 const express = require('express');
 
@@ -68,23 +69,20 @@ async function checkTikTokLive() {
       const connectOptions = {};
       
       if (cleanProxy) {
-        // Очищаємо префікси, якщо вони є (http:// або https://)
-        let proxyAddress = cleanProxy.replace(/^https?:\/\//i, '');
-        const [host, port] = proxyAddress.split(':');
-
-        if (host && port) {
-          console.log(`[ПРОКСІ]: Налаштовуємо пряме підключення через ${host}:${port}`);
-          
-          // Конфігурація для axios всередині бібліотеки tiktok-live-connector
-          connectOptions.webClientOptions = {
-            proxy: {
-              protocol: 'http',
-              host: host,
-              port: parseInt(port, 10)
-            },
-            timeout: 15000 // 15 секунд на відповідь
-          };
-        }
+        // Якщо проксі введено без http://, додаємо його для агента
+        const proxyUrl = cleanProxy.startsWith('http') ? cleanProxy : `http://${cleanProxy}`;
+        console.log(`[ПРОКСІ]: Запуск тунелю через агент: ${proxyUrl}`);
+        
+        // Створюємо залізобетонний агент для проксика
+        const agent = new HttpsProxyAgent(proxyUrl);
+        
+        connectOptions.webClientOptions = {
+          requestOptions: {
+            httpsAgent: agent,
+            httpAgent: agent,
+            timeout: 15000
+          }
+        };
       }
 
       const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME, connectOptions);
