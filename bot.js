@@ -14,6 +14,7 @@ try {
 
 const { createClient } = require('@supabase/supabase-js');
 const { HttpsProxyAgent } = require('https-proxy-agent');
+const { SocksProxyAgent } = require('socks-proxy-agent');
 const axios = require('axios');
 const express = require('express');
 
@@ -69,12 +70,11 @@ async function checkTikTokLive() {
       const connectOptions = {};
       
       if (cleanProxy) {
-        // Якщо проксі введено без http://, додаємо його для агента
-        const proxyUrl = cleanProxy.startsWith('http') ? cleanProxy : `http://${cleanProxy}`;
-        console.log(`[ПРОКСІ]: Запуск тунелю через агент: ${proxyUrl}`);
+        // Переконуємося, що протокол вказано як socks5://
+        const proxyUrl = cleanProxy.startsWith('socks') ? cleanProxy : `socks5://${cleanProxy}`;
+        console.log(`[ПРОКСІ]: Запуск SOCKS-тунелю: ${proxyUrl}`);
         
-        // Створюємо залізобетонний агент для проксика
-        const agent = new HttpsProxyAgent(proxyUrl);
+        const agent = new SocksProxyAgent(proxyUrl);
         
         connectOptions.webClientOptions = {
           requestOptions: {
