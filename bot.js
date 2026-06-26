@@ -61,7 +61,13 @@ async function checkTikTokLive() {
 
     try {
       // Беремо проксі з налаштувань Render або залишаємо порожнім
-      const proxyUrl = process.env.PROXY_URL || ""; 
+      const fs = require('fs');
+      const proxyUrl = process.env.PROXY_URL || "";
+
+      // Якщо в Render передано куки, створюємо для них тимчасовий файл
+      if (process.env.TIKTOK_COOKIES) {
+        fs.writeFileSync('/tmp/cookies.txt', process.env.TIKTOK_COOKIES);
+      }
 
       const options = {
         getUrl: true,
@@ -78,6 +84,11 @@ async function checkTikTokLive() {
       }
 
       const videoUrl = await ytDlp(`https://www.tiktok.com/@${TIKTOK_USERNAME}/live`, options);
+
+      // Якщо файл з куками успішно створився, змушуємо yt-dlp прочитати його
+      if (fs.existsSync('/tmp/cookies.txt')) {
+        options.cookies = '/tmp/cookies.txt';
+      }
 
       // Якщо утиліта знайшла дані — стрім іде!
       if (videoUrl) {
