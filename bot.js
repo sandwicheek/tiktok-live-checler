@@ -35,12 +35,13 @@ app.get('/', (req, res) => res.send('Бот працює!'));
 app.get('/ping', (req, res) => res.send('Понг!'));
 app.listen(PORT, () => console.log(`Вебсервер запущено на порту ${PORT}`));
 
+// Функція тепер використовує HTML розмітку
 async function sendTelegramAlert(text) {
   try {
     await axios.post(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       chat_id: TELEGRAM_CHAT_ID,
       text: text,
-      parse_mode: "Markdown"
+      parse_mode: "HTML" 
     });
   } catch (tgError) {
     console.error("Помилка відправки в TG:", tgError.message);
@@ -53,7 +54,9 @@ async function checkTikTokLive() {
   try {
     // 1. Беремо попередній статус із бази Supabase
     const { data: statusData } = await supabase.from('bot_status').select('is_live').eq('id', 1).single();
-    const lastStatus = statusData ? statusData.is_live : "false";
+    
+    // .trim() прибирає випадкові пробіли, String() перетворює все в текст
+    const lastStatus = statusData && statusData.is_live ? String(statusData.is_live).trim() : "false";
 
     let isLiveNow = "false";
 
@@ -61,7 +64,7 @@ async function checkTikTokLive() {
     const options = {
       method: 'GET',
       url: 'https://tiktok-api23.p.rapidapi.com/api/live/check-alive',
-      params: { uniqueId: TIKTOK_USERNAME }, // Сюди автоматично підставиться нікнейм, який ти тестуєш
+      params: { uniqueId: TIKTOK_USERNAME }, 
       headers: {
         'x-rapidapi-key': process.env.RAPIDAPI_KEY,
         'x-rapidapi-host': 'tiktok-api23.p.rapidapi.com',
@@ -83,16 +86,15 @@ async function checkTikTokLive() {
     }
 
     if (isLiveNow === "true") {
-      console.log(`[СТАТУС]: @${TIKTOK_USERNAME} зараз в ЕФІРІ! 🔴`);
+      console.log(`[СТАТУС]: @${TIKTOK_USERNAME} зараз в ЕФІРІ! 🔴 (Попередній у базі: ${lastStatus})`);
     } else {
-      console.log(`[СТАТУС]: @${TIKTOK_USERNAME} зараз офлайн. 💤`);
+      console.log(`[СТАТУС]: @${TIKTOK_USERNAME} зараз офлайн. 💤 (Попередній у базі: ${lastStatus})`);
     }
 
-    // 4. Логіка сповіщень у Телеграм
+    // 4. Логіка сповіщень у Телеграм (з HTML тегами <b> для жирного тексту)
     if (isLiveNow === "true" && lastStatus === "false") {
-      await sendTelegramAlert(`🔴 **Почався ефір!**\n\nАкаунт: @${TIKTOK_USERNAME}\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
+      await sendTelegramAlert(`🔴 <b>Почався ефір!</b>\n\nАкаунт: @${TIKTOK_USERNAME}\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
       
-      // Оновлюємо текст на "true" для рядка з id = 1
       const { error } = await supabase
         .from('bot_status')
         .update({ is_live: 'true' }) 
@@ -105,7 +107,6 @@ async function checkTikTokLive() {
     else if (isLiveNow === "false" && lastStatus === "true") {
       await sendTelegramAlert(`🟢 Трансляція акаунта @${TIKTOK_USERNAME} завершилась.`);
       
-      // Оновлюємо текст на "false" для рядка з id = 1
       const { error } = await supabase
         .from('bot_status')
         .update({ is_live: 'false' }) 
