@@ -50,40 +50,33 @@ async function sendTelegramAlert(text) {
 const axios = require('axios');
 
 async function checkTikTokLive() {
-  console.log(`Перевірка трансляції для @${TIKTOK_USERNAME} через tiktok-api23...`);
+  console.log(`Перевірка трансляції для @${TIKTOK_USERNAME} через RapidAPI (Check Alive)...`);
 
   try {
-    // 1. Статус із бази Supabase
+    // 1. Беремо попередній статус із бази Supabase
     const { data: statusData } = await supabase.from('bot_status').select('is_live').eq('id', 1).single();
     const lastStatus = statusData ? statusData.is_live : "false";
 
     let isLiveNow = "false";
 
-    // 2. Робимо запит до профілю користувача
+    // 2. Налаштування запиту до RapidAPI
     const options = {
       method: 'GET',
-      // Використовуємо ендпоінт детальної інформації про юзера
-      url: 'https://tiktok-api23.p.rapidapi.com/api/user/info', 
-      params: { uniqueId: TIKTOK_USERNAME }, // Шукаємо за нікнеймом
+      url: 'https://tiktok-api23.p.rapidapi.com/api/live/check-alive',
+      params: { uniqueId: TIKTOK_USERNAME }, // Сюди автоматично підставиться нікнейм, який ти тестуєш
       headers: {
         'x-rapidapi-key': process.env.RAPIDAPI_KEY,
-        'x-rapidapi-host': 'tiktok-api23.p.rapidapi.com'
+        'x-rapidapi-host': 'tiktok-api23.p.rapidapi.com',
+        'Content-Type': 'application/json'
       }
     };
 
     const response = await axios.request(options);
     
-    // 3. Дивимось у відповідь від API
-    // Зазвичай структура така: response.data.userInfo.user.inLive
-    // Або просто response.data.isLive. 
-    // Якщо сумніваєшся, глянь на мобільному в RapidAPI вкладку "Example Response".
-    if (response.data && response.data.userInfo && response.data.userInfo.user) {
-      const user = response.data.userInfo.user;
-      
-      // Перевіряємо статус лайву (у ТікТоку це поле часто називається inLive або підсвічується статус roomId)
-      if (user.inLive === true || user.roomId) {
-        isLiveNow = "true";
-      }
+    // 3. Перевірка відповіді
+    // Ми перевіряємо і поле 'alive', і поле 'isLive' про всяк випадок, щоб точно вгадати структуру API
+    if (response.data && (response.data.alive === true || response.data.isLive === true)) { 
+      isLiveNow = "true";
     }
 
     if (isLiveNow === "true") {
@@ -92,7 +85,7 @@ async function checkTikTokLive() {
       console.log(`[СТАТУС]: @${TIKTOK_USERNAME} зараз офлайн. 💤`);
     }
 
-    // 4. Сповіщення в Телеграм
+    // 4. Твоя стандартна логіка сповіщень у Телеграм
     if (isLiveNow === "true" && lastStatus === "false") {
       await sendTelegramAlert(`🔴 **Почався ефір!**\n\nАкаунт: @${TIKTOK_USERNAME}\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
       await supabase.from('bot_status').update({ is_live: 'true' }).eq('id', 1);
@@ -102,7 +95,7 @@ async function checkTikTokLive() {
       await supabase.from('bot_status').update({ is_live: 'false' }).eq('id', 1);
     }
   } catch (error) {
-    console.error("Помилка API tiktok-api23:", error.message);
+    console.error("Помилка RapidAPI Check Alive:", error.message);
   }
 }
 
