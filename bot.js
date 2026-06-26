@@ -95,27 +95,28 @@ async function checkTikTokLive() {
     if (isLiveNow === "true" && lastStatus === "false") {
       await sendTelegramAlert(`🔴 <b>Почався ефір!</b>\n\nАкаунт: @${TIKTOK_USERNAME}\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
       
+      // Використовуємо .upsert замість .update
       const { error } = await supabase
         .from('bot_status')
-        .update({ is_live: 'true' }) 
-        .eq('id', 1);
+        .upsert({ id: 1, is_live: 'true' });
 
       if (error) {
         console.error("Помилка оновлення статусу в Supabase:", error.message);
       }
     } 
     else if (isLiveNow === "false" && lastStatus === "true") {
-      await sendTelegramAlert(`🟢 Трансляція акаунта @${TIKTOK_USERNAME} завершилась.`);
+      await sendTelegramAlert(`🟢 Трасляція акаунта @${TIKTOK_USERNAME} завершилась.`);
       
+      // Використовуємо .upsert замість .update
       const { error } = await supabase
         .from('bot_status')
-        .update({ is_live: 'false' }) 
-        .eq('id', 1);
+        .upsert({ id: 1, is_live: 'false' });
 
       if (error) {
         console.error("Помилка оновлення статусу в Supabase:", error.message);
       }
     }
+    
   } catch (error) {
     console.error("Помилка під час перевірки стріму:", error.message);
   }
