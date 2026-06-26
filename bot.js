@@ -89,16 +89,32 @@ async function checkTikTokLive() {
     }
 
     // 4. Твоя стандартна логіка сповіщень у Телеграм
-    if (isLiveNow === "true" && lastStatus === "false") {
+    // Приводимо до рядка про всяк випадок, щоб порівняння було залізобетонним
+    if (isLiveNow === "true" && String(lastStatus) === "false") {
       await sendTelegramAlert(`🔴 **Почався ефір!**\n\nАкаунт: @${TIKTOK_USERNAME}\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
-      await supabase.from('bot_status').update({ is_live: 'true' }).eq('id', 1);
+      
+      // Пробуємо оновити і як boolean, і як string (Supabase сам з'їсть правильний формат)
+      const { error } = await supabase
+        .from('bot_status')
+        .update({ is_live: true }) // Спробуй без лапок (як true/false)
+        .eq('id', 1);
+
+      if (error) {
+        console.error("Помилка оновлення статусу в Supabase:", error.message);
+      }
     } 
-    else if (isLiveNow === "false" && lastStatus === "true") {
+    else if (isLiveNow === "false" && String(lastStatus) === "true") {
       await sendTelegramAlert(`🟢 Трансляція акаунта @${TIKTOK_USERNAME} завершилась.`);
-      await supabase.from('bot_status').update({ is_live: 'false' }).eq('id', 1);
+      
+      const { error } = await supabase
+        .from('bot_status')
+        .update({ is_live: false }) // Спробуй без лапок
+        .eq('id', 1);
+
+      if (error) {
+        console.error("Помилка оновлення статусу в Supabase:", error.message);
+      }
     }
-  } catch (error) {
-    console.error("Помилка RapidAPI Check Alive:", error.message);
   }
 }
 
