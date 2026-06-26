@@ -59,6 +59,16 @@ async function checkTikTokLive() {
     }
 
     try {
+      // Передаємо проксі в налаштуваннях запиту
+      const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME, {
+        requestOptions: {
+          proxy: "http://85.214.204.79:80"
+        }
+      });
+      
+      const state = await tiktokConnection.connect();
+
+    try {
       const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME);
       const state = await tiktokConnection.connect();
       if (state.roomId) {
