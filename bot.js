@@ -68,17 +68,28 @@ async function checkTikTokLive() {
       const connectOptions = {};
       
       if (cleanProxy) {
-        // Переконуємося, що проксі має правильний формат для бібліотеки
-        console.log(`[СПРОБА]: Робимо запит через проксі: ${cleanProxy}`);
-        connectOptions.requestOptions = {
-          proxy: cleanProxy,
-          timeout: 10000 // додаємо таймаут 10 секунд, щоб не виснути
-        };
+        // Очищаємо префікси, якщо вони є (http:// або https://)
+        let proxyAddress = cleanProxy.replace(/^https?:\/\//i, '');
+        const [host, port] = proxyAddress.split(':');
+
+        if (host && port) {
+          console.log(`[ПРОКСІ]: Налаштовуємо пряме підключення через ${host}:${port}`);
+          
+          // Конфігурація для axios всередині бібліотеки tiktok-live-connector
+          connectOptions.webClientOptions = {
+            proxy: {
+              protocol: 'http',
+              host: host,
+              port: parseInt(port, 10)
+            },
+            timeout: 15000 // 15 секунд на відповідь
+          };
+        }
       }
 
       const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME, connectOptions);
 
-      // Викликаємо внутрішній метод підключення
+      // Виконуємо запит до ТТ
       const state = await tiktokConnection.connect();
       
       if (state && state.roomId) {
@@ -86,6 +97,12 @@ async function checkTikTokLive() {
       } else {
         isLiveNow = "false";
       }
+      
+      tiktokConnection.disconnect();
+    } catch (tiktokError) {
+      isLiveNow = "false";
+      console.log(`[ТІКТОК API ПОМИЛКА]: ${tiktokError.message}`);
+    }
       
       tiktokConnection.disconnect();
     } catch (tiktokError) {
