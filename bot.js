@@ -64,21 +64,35 @@ async function checkTikTokLive() {
     }
 
     try {
-      // Створюємо підключення з проксі-сервером
-      const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME, {
-        requestOptions: {
-          proxy: PROXY_URL
-        }
-      });
-
-      const state = await tiktokConnection.connect();
-      if (state.roomId) {
-        isLiveNow = "true";
+      const cleanProxy = PROXY_URL ? PROXY_URL.trim() : "";
+      const connectOptions = {};
+      
+      if (cleanProxy) {
+        // Переконуємося, що проксі має правильний формат для бібліотеки
+        console.log(`[СПРОБА]: Робимо запит через проксі: ${cleanProxy}`);
+        connectOptions.requestOptions = {
+          proxy: cleanProxy,
+          timeout: 10000 // додаємо таймаут 10 секунд, щоб не виснути
+        };
       }
+
+      const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME, connectOptions);
+
+      // Викликаємо внутрішній метод підключення
+      const state = await tiktokConnection.connect();
+      
+      if (state && state.roomId) {
+        isLiveNow = "true";
+      } else {
+        isLiveNow = "false";
+      }
+    }
+      
       tiktokConnection.disconnect();
     } catch (tiktokError) {
       isLiveNow = "false";
-      console.log(`[ІНФО]: ТікТок повернув статус офлайн або помилку: ${tiktokError.message}`);
+      // Тепер ми точно побачимо, де саме і яка помилка сталася
+      console.log(`[ТІКТОК API ПОМИЛКА]: ${tiktokError.message}`);
     }
 
     if (isLiveNow === "true") {
