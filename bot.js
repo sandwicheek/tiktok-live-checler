@@ -47,56 +47,37 @@ async function sendTelegramAlert(text) {
   }
 }
 
-const ytDlp = require('yt-dlp-exec');
+const axios = require('axios');
 
 async function checkTikTokLive() {
-  console.log(`Перевірка трансляції для @${TIKTOK_USERNAME} через систему тунелювання...`);
+  console.log(`Перевірка трансляції для @${TIKTOK_USERNAME} через RapidAPI...`);
 
   try {
-    // 1. Беремо статус із бази Supabase
+    // 1. Беремо попередній статус із бази Supabase
     const { data: statusData } = await supabase.from('bot_status').select('is_live').eq('id', 1).single();
     const lastStatus = statusData ? statusData.is_live : "false";
 
     let isLiveNow = "false";
 
-    try {
-      // Беремо проксі з налаштувань Render або залишаємо порожнім
-      const fs = require('fs');
-      const proxyUrl = process.env.PROXY_URL || "";
-
-      // Якщо в Render передано куки, створюємо для них тимчасовий файл
-      if (process.env.TIKTOK_COOKIES) {
-        fs.writeFileSync('/tmp/cookies.txt', process.env.TIKTOK_COOKIES);
+    // 2. Налаштування запиту до RapidAPI
+    const options = {
+      method: 'GET',
+      // Увага: URL та Host нижче вказані як приклад! 
+      // Замініть їх на точні дані з того API, яке оберете на сайті.
+      url: 'https://tiktok-all-in-one-api.p.rapidapi.com/user/live/status', 
+      params: { username: TIKTOK_USERNAME },
+      headers: {
+        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY, // Ключ сховаємо в Render
+        'X-RapidAPI-Host': 'tiktok-all-in-one-api.p.rapidapi.com' 
       }
+    };
 
-      const options = {
-        getUrl: true,
-        noWarnings: true,
-        strictOptions: true,
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        noCheckCertificates: true,
-        geoBypass: true
-      };
-
-      // Якщо проксі вказано, додаємо його в аргументи для yt-dlp
-      if (proxyUrl) {
-        options.proxy = proxyUrl;
-      }
-
-      const videoUrl = await ytDlp(`https://www.tiktok.com/@${TIKTOK_USERNAME}/live`, options);
-
-      // Якщо файл з куками успішно створився, змушуємо yt-dlp прочитати його
-      if (fs.existsSync('/tmp/cookies.txt')) {
-        options.cookies = '/tmp/cookies.txt';
-      }
-
-      // Якщо утиліта знайшла дані — стрім іде!
-      if (videoUrl) {
-        isLiveNow = "true";
-      }
-    } catch (ytDlpError) {
-      // Якщо Настя офлайн, yt-dlp викине помилку "No live stream", і ми просто ставимо false
-      isLiveNow = "false";
+    const response = await axios.request(options);
+    
+    // 3. Перевіряємо відповідь від сервісу. 
+    // (Подивись у документації обраного API, як саме вони повертають статус: true/false чи 1/0)
+    if (response.data && response.data.isLive === true) {
+      isLiveNow = "true";
     }
 
     if (isLiveNow === "true") {
@@ -105,7 +86,7 @@ async function checkTikTokLive() {
       console.log(`[СТАТУС]: @${TIKTOK_USERNAME} зараз офлайн. 💤`);
     }
 
-    // 3. Твоя рідна логіка сповіщень у Телеграм
+    // 4. Твоя рідна логіка сповіщень у Телеграм
     if (isLiveNow === "true" && lastStatus === "false") {
       await sendTelegramAlert(`🔴 **Почався ефір!**\n\nАкаунт: @${TIKTOK_USERNAME}\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
       await supabase.from('bot_status').update({ is_live: 'true' }).eq('id', 1);
@@ -114,8 +95,8 @@ async function checkTikTokLive() {
       await sendTelegramAlert(`🟢 Трансляція акаунта @${TIKTOK_USERNAME} завершилась.`);
       await supabase.from('bot_status').update({ is_live: 'false' }).eq('id', 1);
     }
-  } catch (globalError) {
-    console.error("Помилка в циклі перевірки:", globalError.message);
+  } catch (error) {
+    console.error("Помилка при роботі з RapidAPI:", error.message);
   }
 }
 
