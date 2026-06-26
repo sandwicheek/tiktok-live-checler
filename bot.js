@@ -93,7 +93,7 @@ async function checkTikTokLive() {
 
     // 4. Логіка сповіщень у Телеграм (з HTML тегами <b> для жирного тексту)
     if (isLiveNow === "true" && lastStatus === "false") {
-      await sendTelegramAlert(`🔴 <b>Почався ефір!</b>\n\nАкаунт: @${TIKTOK_USERNAME}\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
+      await sendTelegramAlert(`🔴 <b>Почався ефір у ${TIKTOK_NICKNAME}!</b>\nПосилання: https://www.tiktok.com/@${TIKTOK_USERNAME}/live`);
       
       // Використовуємо .upsert замість .update
       const { error } = await supabase
@@ -105,7 +105,7 @@ async function checkTikTokLive() {
       }
     } 
     else if (isLiveNow === "false" && lastStatus === "true") {
-      await sendTelegramAlert(`🟢 Трасляція акаунта @${TIKTOK_USERNAME} завершилась.`);
+      await sendTelegramAlert(`🟢 Ефір у ${TIKTOK_NICKNAME} завершився.`);
       
       // Використовуємо .upsert замість .update
       const { error } = await supabase
