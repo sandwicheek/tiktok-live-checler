@@ -59,14 +59,15 @@ async function checkTikTokLive() {
 
     let isLiveNow = "false";
 
-    try {
-      // 2. Викликаємо утиліту yt-dlp. Вона сама імітує браузер і обходить захист TikTok
-      // Шукаємо пряме посилання на поток (get-url)
+    // Додаємо жорстку імітацію реального браузера та ігнорування блоків
       const videoUrl = await ytDlp(`https://www.tiktok.com/@${TIKTOK_USERNAME}/live`, {
         getUrl: true,
-        dumpSingleJson: true,
         noWarnings: true,
-        strictOptions: true
+        strictOptions: true,
+        // Оці 3 рядки нижче — наша нова зброя:
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        noCheckCertificates: true,
+        geoBypass: true
       });
 
       // Якщо утиліта знайшла дані — стрім іде!
