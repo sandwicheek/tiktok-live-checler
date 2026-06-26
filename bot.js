@@ -26,6 +26,11 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const RENDER_APP_URL = process.env.RENDER_APP_URL;
 
+// --- НАЛАШТУВАННЯ ПРОКСІ ---
+// Заміни тут IP та ПОРТ на свої. Якщо є логін/пароль, формат: "http://user:pass@ip:port"
+const PROXY_URL = "http://ТВІЙ_IP:ТВІЙ_ПОРТ"; 
+// ---------------------------
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 app.get('/', (req, res) => res.send('Бот працює!'));
@@ -59,17 +64,13 @@ async function checkTikTokLive() {
     }
 
     try {
-      // Передаємо проксі в налаштуваннях запиту
+      // Створюємо підключення з проксі-сервером
       const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME, {
         requestOptions: {
-          proxy: "http://85.214.204.79:80"
+          proxy: PROXY_URL
         }
       });
-      
-      const state = await tiktokConnection.connect();
 
-    try {
-      const tiktokConnection = new WebcastPushConnection(TIKTOK_USERNAME);
       const state = await tiktokConnection.connect();
       if (state.roomId) {
         isLiveNow = "true";
