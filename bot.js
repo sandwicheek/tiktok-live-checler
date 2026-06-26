@@ -77,6 +77,8 @@ async function checkTikTokLive() {
         options.proxy = proxyUrl;
       }
 
+      const videoUrl = await ytDlp(`https://www.tiktok.com/@${TIKTOK_USERNAME}/live`, options);
+
       // Якщо утиліта знайшла дані — стрім іде!
       if (videoUrl) {
         isLiveNow = "true";
