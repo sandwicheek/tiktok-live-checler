@@ -71,12 +71,15 @@ async function checkTikTokLive() {
 
     const response = await axios.request(options);
     
-    // 3. Перевірка відповіді
-    // Ми перевіряємо і поле 'alive', і поле 'isLive' про всяк випадок, щоб точно вгадати структуру API
     console.log("РЕАЛЬНА ВІДПОВІДЬ API:", JSON.stringify(response.data));
     
-    if (response.data && (response.data.alive === true || response.data.isLive === true)) { 
-      isLiveNow = "true";
+    // --- ОНОВЛЕНА ПЕРЕВІРКА ДЛЯ МАСИВУ DATA ---
+    if (response.data && response.data.data && response.data.data[0]) {
+      const liveData = response.data.data[0];
+      
+      if (liveData.alive === true) {
+        isLiveNow = "true";
+      }
     }
 
     if (isLiveNow === "true") {
