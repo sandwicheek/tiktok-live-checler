@@ -115,7 +115,6 @@ async function checkTikTokLive() {
         console.error("Помилка оновлення статусу в Supabase:", error.message);
       }
     }
-  }
 }
 
 setInterval(checkTikTokLive, 240000);
