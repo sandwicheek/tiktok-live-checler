@@ -115,11 +115,16 @@ async function checkTikTokLive() {
         console.error("Помилка оновлення статусу в Supabase:", error.message);
       }
     }
+  } catch (error) {
+    console.error("Помилка під час перевірки стріму:", error.message);
+  }
 }
 
+// Перевірка кожні 4 хвилини (240000 мс)
 setInterval(checkTikTokLive, 240000);
 checkTikTokLive();
 
+// Самопінг кожні 10 хвилин (600000 мс)
 setInterval(() => {
   if (RENDER_APP_URL) {
     axios.get(`${RENDER_APP_URL}/ping`)
