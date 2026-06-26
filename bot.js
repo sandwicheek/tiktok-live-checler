@@ -28,7 +28,7 @@ const RENDER_APP_URL = process.env.RENDER_APP_URL;
 
 // --- НАЛАШТУВАННЯ ПРОКСІ ---
 // Заміни тут IP та ПОРТ на свої. Якщо є логін/пароль, формат: "http://user:pass@ip:port"
-const PROXY_URL = "http://152.89.253.33:8443"; 
+const PROXY_URL = "http://91.185.20.162:8080"; 
 // ---------------------------
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
